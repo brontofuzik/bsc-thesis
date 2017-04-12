@@ -1,0 +1,158 @@
+\chapter{Learning}
+\addcontentsline{toc}{chapter}{Learning} % TODO : Necessary?
+
+Before a multi-layer perceptron (or any other neural network for that matter) can successfully be used, it has to undergo learning. \textit{Learning}, in its most general meaning, refers  to a process, during which the following characteristics of a neural network are determined:
+
+\begin{itemize}
+\item the architecture, namely the number of hidden layers and the numbers of hidden neurons comprising each hidden layer, and
+\item the synaptic weights.
+\end{itemize}
+
+Note that apart from those mentioned above, there are other architectural aspects to be considered. These involve
+
+\begin{itemize}
+\item the number of input and output neurons and
+\item the choice of aggregation and activation functions for each non-input layer.
+\end{itemize}
+
+However, these are usually addressed by the designer of the multi-layer perceptron before committing the neural network to the actual learning process. This is because they are either
+
+\begin{itemize}
+\item determined by the task itself (the number of input and output neurons) or
+\item they are fundamental to the task and require the irreplaceable attention of the designer (the choice of activation function for each non-input layer).
+\end{itemize}
+
+In this thesis, only learning algorithms operating on fixed-topology multi-layer perceptrons are discussed. Hence, when referring to the learning of a multi-layer perceptron, only the adjustment of synaptic weights is implied. Its more general meaning will either be apparent from the context or stated explicitly.
+
+In the previous chapter, we have established that a particular neural network (parametrized by its synaptic weights) realizes a certain function $ f $. Since, coming from this perspective, a particular neural network is something of a `physical embodiment' of the function it computes, it is convenient not to distinguish between that particular neural network and its corresponding function. According to the same logic, a distinction between a neural network model and a corresponding class of functions $ \mathcal{F} $ is not made in the following explanation.
+      
+More specifically speaking, learning is a process of using a set of observations (known as \textit{data patterns} or \textit{training patterns}) to find the function $ f^* $ (known as the \textit{optimal function} or the \textit{optimal solution}) from a given class of functions $ \mathcal{F} $, that solves the specific task in an `optimal sense'.
+
+%%%%% COST FUNCTION %%%%%
+\section{Cost Function}
+
+In order to have an exact understanding of what `optimal sense' means, and hence be able to find the optimal function, we require a \textit{cost function} (also known as \textit{objective function}) $C : \mathcal{F} \rightarrow \mathbb{{R}} $ such that no solution has a cost less that the optimal solution, i.e. $(\forall f \in \mathcal{F})(C(f^*) \leq C(f))$. In plain English, the cost function provides a measure of `goodness' to a class of functions $ \mathcal{F} $. All learning algorithms search the solution space for a function that has the smallest possible cost.
+
+The cost function is typically defined as a function of the observations - a statistic to which only approximations can be made, for example
+$$C = E[(f(x) - y)^2]$$
+where $(x, y)$ are the data pairs drawn from some distribution $ \mathcal{D} $ \cite{Wikipedia-Artificial_neural_network}.
+
+In practice however, only a finite number $ k \in \mathbb{N} $ of training patterns is usually available. Because of this limitation, the cost is minimised over a sample of the data distribution (known as training set) instead of the entire data distribution:
+$$ \hat{C} = \frac{1}{k} \sum_{i = 1}^{k}{(f(x_i) - y_i)^2}. $$
+
+Unquestionably, the cost function may be picked arbitrarily, but more often than not, its choice is aided by the desirability of some of its properties (e.g.
+convexity) or the particular formulation of the problem itself. Ultimately the cost function will depend on the task we wish to perform.
+
+% ON-LINE LEARNIGN VS. BATCH LEARNING
+
+In some situations, an infinite number of training patterns (an infinite training set) is theoretically  available. The training patterns are provided one at a time and typically represent data obtained by periodically sampling some continuous event. Under such circumstances, some form of \textit{on-line learning} has to be performed - the cost is partially minimised with each new training pattern encountered. This type of learning is especially appropriate if the distribution $ \mathcal{D} $, from which the training patterns are drawn, changes slowly over time \cite{Wikipedia-Artificial_neural_network}.
+
+Since any time series is a result of periodical sampling of some continuous event, it can be used to provide a (potentially) infinite number of training patterns piece by piece. However, we have decided not to pursue this approach and instead opted for so-called \textit{batch learning}.
+
+%%%%% LEARNING PARDIGMS %%%%%
+\section{Learning Paradigms}
+
+Three main learning paradigms are generally recognized in the neural network literature:
+\begin{itemize}
+\item supervised learning,
+\item unsupervised learning, and
+\item reinforcement learning.
+\end{itemize}
+
+Note that there is no strictly defined relation between neural network models and learning paradigms, i.e. none of the learning paradigms is associated with any particular type of neural network, and none of the neural network types is tied to any particular learning paradigm.
+
+Depending on the task to solve, we may have a \textit{(fully) labelled}, \textit{partially labelled} or \textit{unlabelled} training set at our disposal. Every training pattern contained in a labelled training set is labelled, i.e. contains both an input vector and a (desired) output vector. Unlabelled training set, on the other hand, consists of only unlabelled training patterns, i.e. training patterns containing only an input vector. Partially labelled training sets contain a mixture of labelled and unlabelled training patterns.
+
+Labelled training sets are used during supervised learning, partially labelled training sets during semi-supervised learning and unlabelled training sets during unsupervised learning. Hence, each learning paradigm is an abstraction of a particular group of learning tasks.
+
+When training a multi-layer perceptron to forecast time series based on past observation, we know what the correct answer to each input vector from the past should have been by looking at the series itself, i.e. every input vector has a desired output vector associated with it. Therefore, a labelled training set can be constructed for a supervised learning session.
+
+%%%%% SUPERVISED LEARNING %%%%%
+\section{Supervised Learning}
+
+In supervised learning, we are presented with a set of training patterns $ (v_i, v_o) $, where $ v_i \in V_i $ is the \textit{input vector} and $ v_o \in V_o $ is the \textit{(desired) output vector}, and the goal is to find a function $ f : V_i \rightarrow V_o $, where $ V_i $ is the vector space of all input vectors and $ V_o $ is the vector space of all output vectors that matches all training patterns, i.e. when presented with a training pattern's input vector, it will return its desired output vector. To put it differently, we would like to infer the mapping implied by the data.
+
+Ideally, the cost function should penalize the mismatch between the inferred mapping and the mapping contained in the training set. It may be custom-tailored by a designer to inherently contain prior knowledge about the problem domain. A favourite among the cost functions is the \textit{mean-squared error} presented in section 4.1 of this chapter.
+
+A convenient way to think about this paradigm is to imagine a teacher guiding the learning process of a network. The teacher knows what is the correct output to every input from the training set. Hence, he is able to train the network by providing it with feedback.
+
+%%%%% LEARNING ALGORIHMS %%%%%
+\section{Learning Algorithms}
+
+\textit{Learning algorithm}, or \textit{training algorithm}, is an algorithm which trains a neural network. Numerous learning algorithms, \textit{deterministic} or \textit{stochastic} in nature, have been proposed.
+
+A typical \textit{deterministic learning algorithm} implements some form of \textit{gradient descent} (also known as \textit{steepest descent}). This is done by simply taking the derivative of the cost function with respect to a network's configuration (synaptic weights) and then changing that configuration in a gradient-related direction \cite{Wikipedia-Artificial_neural_network}. In this thesis, the most widely used of all deterministic learning algorithms, \textit{Backpropagation}, will be discussed.
+
+As opposed to the deterministic learning algorithms, the stochastic learning algorithms introduce a certain amount of `randomness' to the learning process.\footnote{Of course, one may point out, and correctly so, that Backpropagation learning algorithm also employs a pseudo-random number generator. However, it does so only to initialize the synaptic weights; after the learning itself begins, the algorithm proceeds in a deterministic fashion.}
+
+The stochastic learning algorithms introduced in this thesis are each an implementation of some metaheuristic. A \textit{metaheuristic} (greek for `higher order heuristic') is a heuristic method for solving a very general class of computational problems by combining user-given black-box procedures -- usually heuristics themselves -- in the hope of obtaining a more efficient or more robust procedure.
+
+In this thesis, some of the most interesting metaheuristics -- \textit{Genetic Algorithms}, \textit{Simulated Annealing} and \textit{Ant Colony Optimization} -- are introduced. All of the these were originally designed to solve combinatorial optimization problems. Our goal was to implement them as learning algorithms, which means applying them to the continuous domain.
+
+In should be noted that the learning process is not restricted to using a single learning algorithm. The learning algorithms may be combined to form a \textit{hybrid learning algorithm}. The individual learning algorithms forming a hybrid do not necessarily have to belong to the same category (deterministic or stochastic). Particularly noteworthy hybrid learning algorithms that have been proposed include:
+\begin{itemize}
+\item a genetic algorithm where each individual performs a few iterations of `hill-climbing' before being evaluated (GA-BP) and
+\item a simulated annealing where the parameters are controlled by a genetic algorithm (SA-GA).
+\end{itemize}
+
+%%%%% BACKPROPAGATION %%%%%
+\subsection{Backpropagation}
+
+\textit{Backpropagation} (abbreviation for `backwards propagation of errors') is a deterministic supervised learning algorithm. Since it employs a form of gradient descent in search for the network error function's minimum, it requires that all non-input neurons in the network have differentiable activation functions.
+
+Šíma and Neruda \cite{Sima96} give the following account of the adaptation procedure. In the beginning of the adaptation process, in time 0, the weights of the configuration $ \vec{w}^{(0)} $ are set to random values from zero's neighbourhood, e.g. $ w_{ji}^{(0)} \in [-1, 1] $. The adaptation runs in discrete time steps, which correspond to the \textit{training cycles} (also referred to as \textit{training epochs}). A new configuration $ \vec{w}^{(t)} $ in time $ t > 0 $ is calculated as follows:
+$$ w_{ji}^{(t)} = w_{ji}^{(t-1)} + \Delta w_{ji}^{(t)} $$
+where the change of weights $\delta w_{ji}^{(t)}$ in time $t > 0$ is proportional to the negative gradient of the error function $E(w)$ at the point $ \vec{w}^{(t - 1)} $:
+$$\Delta w_{ji}^{(t)} = -\epsilon \frac{\partial E}{\partial w_{ji}}(\vec{w}^{(t - 1)}), $$
+where $ 0 < \epsilon < 1 $ is the learning rate.
+
+The \textit{learning rate} $ \epsilon $ is a measure of the training patterns' influence on the adaptation (something of a `willingness' to adapt) and is a rather delicate parameter. A learning rate that is `too low' results in slow convergence and the network error may never drop below the maximum tolerable value even if the computational budget is generous. On the other hand, a learning rate that is `too high' almost inevitably causes divergence and the network error rises above all imaginable bounds. As the learning rate requires a painstaking manual fine-tuning for each particular task, the most helpful recommendations one one can hope to get are nothing more than rules of thumb.As such, they are not intended to be strictly accurate or reliable for every situation.
+
+The most helpful recommendations we have come across suggest maintaining a separate learning rate $ \epsilon_{ji} $ for each weight $ w_{ji} $ in the network. At the beginning of the adaptation, the values of $ \epsilon_{ji} $ are recommended to be chosen conservatively (e.g. in the order of thousandths or ten thousandths), especially for larger topologies. In case of a successful convergence in time $ t > 1 $ (i.e. if $ \delta w_{ji}^{(t)} \delta w_{ji}^{(t - 1)} > 0 $), the learning rate can be increased linearly:
+$$ \epsilon_{ji}^{(t)} = \kappa \epsilon_{ji}^{(t - 1)}, $$
+for $ \kappa > 1 $ (e.g. $\kappa = 1.01$). Otherwise, in case of an apparent divergence, it can be decreased exponentially:
+$$ \epsilon_{ji}^{(t)} = \epsilon_{ji}^{(t - 1)} / 2. $$
+
+During the backpropagation, the layers are updated \textit{sequentially}, starting with the output layer and proceeding with the hidden layers. However the computation within the context of one layer can be \textit{parallelized}.
+
+The Backpropaagtion learning algorithm, as described above, has two major drawbacks. The first drawback is that it can be unacceptably slow, even for relatively small topologies. Plethora of modifications, achieving varying degrees of success, have been proposed to remedy this situation. We have chosen to implement one of the simplest, yet most promising in the \textbf{NeuralNetwork} class library.
+
+\paragraph{Momentum} It has been observed that a low learning rate results in a slow convergence and a high learning rate in a divergence. A simple and often-used modification that seeks to eliminate this shortcoming, takes into consideration the previous weight change -- so-called \textit{momentum} -- when calculating the current weight change in the direction of the error function gradient:
+$$ \delta w_{ji}^{(t)} = - \epsilon \frac{\partial E}{\partial w_{ji}}(\vec{w}^{(t - 1)}) + \alpha \delta w_{ji}^{(t - 1)}, $$
+where $0 < \alpha < 1$ (e.g. $\alpha = 0.9$) is the parameter of momentum that determines the extent of previous changes's influence. This augmentation enables the gradient descent methods to `slide' the surface of the error function $ E(\vec{w}) $ faster.
+
+The second major drawback of the Backpropagation learning algorithm (and all learning algorithm based on the methods of steepest descent) is that the search for the \textit{global minimum} may become `stuck' in a \textit{local minimum}. The fact that a convergence to a local minimum can not be recognised (and possibly the learning process repeated) makes this drawback even more serious. The \textbf{NeuralNetwork} class library attempts to lower the probability of this happening by two simple remedies.
+
+\paragraph{Multiple Runs} The Backpropagation learning algorithm is run multiple times, each time starting with a random, and hopefully different, initial network configuration. Throughout the multiple runs, the best network configuration found so far is maintained. The more runs, the lower the probability that a gradient descent from all of them led only to local minima.
+
+\paragraph{Jitter} At regular intervals, i.e. once every some predetermined number of training cycles, the synaptic weights of the network are perturbed by having a small random value added to or subtracted from them. The idea is to introduce a healthy amount of randomness to the whole process, thus enabling the network to escape from local minima, should it become trapped in one.
+
+%%%%% GENETIC ALGORITHM %%%%%
+\subsection{Genetic Algorithm}
+
+\textit{Genetic algorithms (GAs)} are a family of computational models inspired by evolution. These algorithms encode a potential solution to a specific problem on a simple chromosome-like data structure and apply recombination operators to these structures so as to preserve critical information. Genetic algorithms are often viewed as function optimizers, although the range of problems to which genetic algorithms have been applied is quite broad.
+
+In his popular tutorial \cite{Whitley94}, Whitley summarises what he calls the \textit{canonical genetic algorithm} as follows. An implementation of a genetic algorithm begins with a population of (typically random) chromosomes. One then evaluates these structures and allocates reproductive opportunities in such a way that those chromosomes which represent a better solution to the target problem are given more chances to `reproduce' than those chromosomes which are poorer solutions. The `goodness' of a solution is typically defined with respect to the current population.
+
+%%%%% SIMULATED ANNEALING %%%%%
+\subsection{Simulated Annealing}
+
+The problem of getting stuck in a local minimum is successfully dealt with by the \textit{simulated annealing (SA)} method. In contrast with the hill-climbing algorithm (for our continuous case, the gradient descent algorithm) it can also accept a worse solution than the current one with certain probability, determined by the \textit{Metropolis criterion}. Another important difference is that instead of exploring the neighbourhood and choosing the best solution ( for our continuous case, calculating the gradient) the current solution is transformed into a new solution by a stochastic operator \cite{Vasicek}.
+
+The inspiration for the method (and its name) comes from a physical process of annealing a solid body used to reduce its inner (crystallographic) defects. The body is heated to a high temperature and the slowly cooled. This enables its atoms to overcome local energetic barriers and settle into equilibria positions. Steady temperature decrease results in the equilibria positions of the atoms being stabilized. Hence, upon reaching the final temperature (which is considerably lower than the initial temperature), all atoms will have attained their equilibria positions and the body will not contain any inner defects.
+
+%%%%% AANT COLONY OPTIMIZATION %%%%%
+\subsection{Ant Colony Optimization}
+
+\textit{Ant Colony Optimization (ACO)} metaheuristic, itself a member of the \textit{Swarm Intelligence (SI)} family of computational methods, is an umbrella term for optimization algorithms inspired by the ants' foraging behaviour. Since their conception in 1992 by Marco Dorigo, several variations on the \textit{canonical ant colony optimization} have been proposed. However, as Socha points out in \cite{Socha04} adhere to the following basic ideas:
+
+\begin{itemize}
+\item Search is performed by a population of individuals - simple independent agents.
+\item There is no direct communication between the individuals.
+\item The solutions are constructed incrementally.
+\item The solution components are chosen probabilistically, based on \textit{stigmergic information}.
+\end{itemize}
+  
+\textit{Stigmergy} is a mechanism for spontaneous, indirect coordination between agents (in our case ants), where the trace left in the environment (in our case the pheromone trail) by an agent' action stimulates the performance of a subsequent action, by the same or a different agent. Stigmergy is a form of self-organization. It produces complex, apparently intelligent structures (in our case finds the shortest paths between the ant colony and a source of food), without need for any planning, control, or even communication between the agents. As such it supports efficient collaboration between extremely simple agents, who lack any memory, intelligence or even awareness of each other\cite{Wikipedia-Stigmergy}.
+
+Even though ACO had initially been used for solving combinatorial optimization problems (e.g. the travelling salesman problem), it has since been extended (without the need to make any major conceptual changes) to continuous and mixed-variable domains.

@@ -1,0 +1,94 @@
+\chapter{Forecasting Markets}
+\addcontentsline{toc}{chapter}{Forecasting Markets} % TODO : Necessary?
+
+When speaking about forecasting markets, the forecasting of some economic time series is usually meant. In this chapter, we will analyse this meaning in a step-by-step fashion. More precisely, we will
+
+\begin{enumerate}
+\item define time series,
+\item characterise and classify economic time series,
+\item explore the constituent components of economic time series,
+\item introduce a particular economic time series we will be using in our forecasting attempts,
+\item overview the taxonomy of forecasting methods, and
+\item discuss the motivation behind forecasting markets using artificial neural networks.
+\end{enumerate}
+
+%%%%% TIME SERIES %%%%%
+\section{Time Series}
+
+A \textit{time series} consists of a set of observations ordered in time, on a given phenomenon (target variable). Usually the measurements are equally spaced, e.g. by year, quarter, month, week, day. The most important property of a time series is that the ordered observations are dependent through time, and the nature of this dependence is of interest in itself \cite{Dagum06}.
+
+Formally, a \textit{time series} is defined as a set of random variables indexed in time, $X_1, ..., X_T$. In this regard, an observed time series is denoted by $ x_1, ..., x_T $, where the sub-index indicates the time to which the observation $x_t$ pertains. The first observed value can be interpreted as the realization of the random variable $x_1$, which can also be written as $X(t = 1, \omega)$ where $\omega$ denotes the event belonging to the sample space. Similarly, $x_2$ is the realization of $X_2$ and so on. The $T$-dimensional vector of random variable can be characterized by different probability distribution \cite{Dagum06}.
+
+For socio-economic time series the probability space is \textit{continuous}, and the time measurements are \textit{discrete}. The frequency of measurements is said to be \textit{high} when it is daily, weekly or monthly and to be \textit{low} when the observations are quarterly or yearly \cite{Dagum06}.
+
+%%%%% TIME SERIES DECOMPOSITION MODELS %%%%%
+\section{Time Series Decomposition Models}
+
+An important objective in time series analysis is the decomposition of a series into a set of non-observable (latent) components that can be associated to different types of temporal variations. Time series is composed of four types of fluctuations \cite{Dagum06}:
+
+\begin{enumerate}
+\item A \textit{long-term tendency} or \textit{secular trend}.
+\item \textit{Cyclical movements} super-imposed upon the long-term trend. These cycles appear to reach their peaks during periods of industrial prosperity and their troughs during periods of depressions, their rise and fall constituting the business cycle.
+\item A \textit{seasonal movement} within each year, the shape of which depends on the nature of the series.
+\item \textit{Residual variations} due to changes impacting individual variables or other major events such as wars and national catastrophes affecting a number of variables.
+\end{enumerate}
+    
+Traditionally, the four variations have been assumed to be mutually independent from one another and specified by means of an \textit{additive decomposition model}
+$$ X_t = T_t + C_t + S_t + I_t, $$
+where $X_t$ denotes the observed series, $T_t$ the long-term trend, $C_t$ the cycle, $S_t$ seasonality and $I_t$ the irregulars.
+
+If there is dependence among the latent components, this relationship is specified through a \textit{multiplicative model}
+$$ X_t = T_t \times C_t \times S_t \times I_t. $$
+
+In some cases, mixed additive-multiplicative models are used.
+
+%%%%% INTERNATIONAL AIRLINE PASSENGERS DATA %%%%%
+\section{International Airline Passengers Data}
+
+The economic time series used in thesis is the famous \textit{international airline passengers data} listed in \cite{Box94} as series G. The series tells the total number of international airline passengers for every month from January 1949 to December 1960. There are several compelling reasons for choosing this particular series, namely:
+
+\begin{itemize}
+\item Demand forecasting (in this case, the demand for airline transportation) is one of the most important areas of economic forecasting.
+\item The series follows a rising trend and displays a seasonal variation (more precisely, \textit{multiplicative seasonality}) making it a first-grade choice to demonstrate the forecasting capabilities of neural networks.
+\item It can be considered a benchmark series, since several groups of researchers have already tried to forecast it, e.g. \cite{Tang91} or \cite{Faraway97}.
+\item Its length is representative of data found in forecasting situations (several years of monthly data).
+\item It is available free of charge.
+\end{itemize}
+
+%%%%% FORECASTING METHODS AND THEIR CLASSIFICATION %%%%%
+\section{Forecasting Methods and their Classification}
+
+A time series observation is made up of a \textit{systematic component}, or \textit{signal}, and a \textit{random component}, or \textit{noise}. Unfortunately, neither of these two components can be observed individually. A \textit{forecasting method}, or \textit{forecasting model}, attempts to isolate the systematic component, so that a reasonable prediction (based on this component) can be made.
+
+Forecasting methods can be classified into two top-level categories:
+
+\begin{itemize}
+\item \textit{Subjective forecasting methods}
+\item \textit{Objective forecasting methods}
+\end{itemize}
+
+As their names suggest, the \textit{subjective forecasting methods} involve human judgement (hence also their alias, \textit{judgemental forecasting methods}). They typically operate with either a small number of highly regarded opinions (a panel-of-experts approach, e.g. the \textit{Delphi method}) or a considerably larger (statistically significant) number of less valuable opinions (a wisdom-of-the-crowds approach, e.g. \textit{conducting a statistical survey}).
+
+\subsection{Objective Forecasting Methods}
+
+The \textit{objective forecasting methods}, on the other hand, attempt to limit the human involvement as much as possible. However, as we will see later, in search for a definitive forecasting solution, they are no silver bullet. At least for now, one simply can not hope to automate the forecasting process to the point where it is devoid of any human interpretation.
+
+Note that neither of the two principal approaches (objective or subjective) has been proven superior. Also, neither of them alone is sufficient to make reliable predictions, i.e. those that ultimately generate profit. After all, not even the their most brilliant fusion can possibly guarantee that. Forecasts obtained by employing only single-category methods are likely to be inaccurate. Therefore, these two families of forecasting methods should be though of as complementary rather than clashing. Not surprisingly, the most successful (meaning the most profitable) contemporary forecasting methodologies use sophisticated mixtures of both.
+
+The objective forecasting methods are further classified into two categories:
+
+\begin{itemize}
+\item \textit{Causal forecasting methods}
+\item \textit{Time series forecasting methods}
+\end{itemize}
+
+The \textit{causal forecasting methods}, also known as the \textit{econometric methods}, assume that, while attempting to forecast a data-generating process, it \textit{is} possible to identify a set of causal processes that influence it. Under such circumstances, the future data can be forecast using the past data of the causal processes.
+
+\subsection{Time Series Forecasting Methods}
+
+The \textit{time series forecasting methods} assume that, while attempting to forecast a data-generating process, it \textit{is not} possible (or affordable) to identify a set of causal processes that influence it. Under such circumstances, the future data can only be forecast using the process' own past data.
+
+%%%%% WHY USE ARTIFICIAL NEURAL NETWORKS TO FORECAST MARKETS? %%%%%
+\section{Why Use Artificial Neural Networks to Forecast Markets?}
+
+In economics, more often than not, it is extremely difficult to put one's finger on the causal processes bearing an influence on some data-generating process. Moreover, their interdependency is likely to be non-linear. The artificial neural networks are \textit{universal function approximators}. A two-layer perceptron can approximate any continuous (linear or non-linear) function to any desired degree of accuracy. Therefore, they are able to learn (and generalize), linear and non-linear time series patterns directly from historical data, i.e. perform a \textit{non-parametric} \textit{data-driven} econometric modelling. Additionally, the underlying connectionist principles at work guarantee a fairly high degree of \textit{error-robustness}. These abilities and properties qualify them as promising (both causal and time series) forecasting tools.

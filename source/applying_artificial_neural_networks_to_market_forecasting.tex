@@ -1,0 +1,169 @@
+\chapter{Applying Artificial Neural Networks to Market Forecasting}
+\addcontentsline{toc}{chapter}{Applying Artificial Neural Networks to Market Forecasting} % TODO : Necessary?
+
+When the idea of applying neural networks to market forecasting (economic time series prediction) first emerged, it was widely believed that neural networks might actually be the `ultimate solution' for this task. Being universal function approximators, capable of approximating any non-linear function, many were hoping they could be employed to infer the highly complex and non-linear relationships among various economic processes. Their black box nature considerably lowered the knowledge requirements one had to met to be able to operate them. These, combined with their relatively high level of fault-tolerance and error-robustness, enticed further research into the field.
+
+However, it soon became apparent that it was unlikely that the process of economic forecasting and modelling will be fully automated and the experienced and skilled statisticians rendered redundant. Applying the artificial neural networks to market forecasting remained a relatively complex task that still involves many important decisions and numerous chances to go astray. Admittedly, much of it still bears the characteristic of a \textit{trial-and-error} process.
+
+In the subsections of this chapter, the most important issues involved in successfully applying neural networks to market forecasting (economic time series prediction) are discussed. These issues are presented according to the order in which they naturally arise during their application. Every issue is discussed both from a general point of view and this thesis' perspective.
+
+\section{Step 1: Validating the Data}
+
+Before we actually begin to forecast the time series, we have to undertake two preliminary steps. First we need to \textit{validate} the data, i.e. check it for range under and/or overflows, logical inconsistencies and ensure that no observations are missing. It is advisable not to skip this step even when the data has been obtained from a reliable vendor.
+The most common issue a forecasting practitioner is likely to come across is the issue of missing observations. Take the Dow Jones Industrial Average, the most famous market index, as an example \cite{DJIA}. The missing observations (Saturdays and Sundays) are due to the stock market being closed on weekends. One safe way to handle the missing observations is to assume the `smoothness' of the time series and express them as averages of nearby observations. Although more sophisticated interpolating techniques could be used, a simple arithmetic mean will suffice.
+
+The time series we are attempting to forecast in this thesis - the international airline passengers data - has been validated by ensuring it contains all 144 observations (12 years of monthly data).
+
+\section{Step 1: Preprocessing the Data}
+
+Preprocessing the time series data in a clever way can relieve the stress placed on any forecasting method and improve its the predictive accuracy. However, an elaborate data pre-processing will not be discussed because we wanted to assess the neural networks' performance when no `help' (e.g. in the form of \textit{feature extraction}) is available.Thus, an absolutely essential data transformation -- \textit{scaling} -- and two other, most commonly used ones -- (\textit{first differencing} and \textit{logging}) are presented in this section. Furthermore, the data preprocessing is an active research field on its own, and exploring its findings beyond these simple techniques point lies outside the frame of this work.
+
+\subsection{Scaling}
+
+Even if we decide not to pre-process the raw data in any way, we have to \textit{scale} them so that they all lie within the bounds of the output layer activation function, that is between 0 and 1 for the logistic function and between -1 and 1 for the hyperbolic tangent function. As a linear function's range is not bounded, no scaling is expected to be necessary when using the identity activation function. 
+
+In our forecasting effort, we have conducted three experiments. The logistic function was chosen as the hidden layer's activation function in all of them. However, they differed in the choice of \textit{scaling factors} and output layer activation functions.
+\begin{enumerate}
+\item In the \textit{first experiment}, raw data (scaling factor equal to 1) was forecast using the identity output layer activation function.
+\item In the \textit{second experiment}, the exact same architecture was given a chance to adapt to scaled data (scaling factor equal to 0.01).
+\item In the final, \textit{third experiment} we conducted, the identity function was replaced by the logistic function and the data was scaled to fit into its range (scaling factor equal to 0.001).
+\end{enumerate}
+
+\subsection{First Differencing and Logging}
+
+\textit{First differencing} (i.e. taking the changes in the dependent variable instead of its absolute value) can be used to remove a linear trend from the data \cite{Kaastra95}. \textit{Logging} the data (i.e. taking the natural logarithms) is useful for time series consisting of both large and small values. Furthermore it converts any multiplicative relationships to additive (e.g. the multiplicative seasonality to additive). It has been suggested in \cite{Masters93} that this simplifies and improves network training.
+However, taking into consideration that the neural networks are able to cope both with linearity and non-linearity, we have instead decided to focus our attention and effort on the actual design of these neural networks rather than concocting sophisticated data transformation schemes.
+
+\section{Step 2: Choosing the Leaps}
+
+The \textit{leaps} describe the future values of the time series we wish to forecast. More formally, the leaps is a vector $ [i_1, i_2, \ldots i_n] $ where $ n $ is the number of future values we want to predict at once and $ i_j $ specifies the offset of the $ j $-th future value, i.e. how far the future value is. As an example, consider the leaps $ [ 0 ] $. This means, we only want to predict the immediate future value (\textit{one-step-ahead forecast}). Compare this with the leaps $ [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 ] $ predicting the next consecutive 12 values at once (\textit{multi-step-ahead} forecast). We might not be interested in the immediate future value at all, and instead forecast the year-ahead value by specifying the following leaps $ [ 12 ] $.
+
+Currently, only one-step-ahead forecasts are supported, i.e. at any given moment in time, only one future value of a time series can be predicted. There are compelling reasons to always use only one output neuron. It has been observed by Masters \cite{Masters93} that neural networks with multiple outputs, especially if these outputs are widely spaced, will produce inferior results as compared to a network with a single output.
+
+However, should the multi-step-ahead forecast be required, there exists an intuitive way to simulate it using one-step-ahead forecasts. We just need to run one-step-ahead forecast for each step we want to obtain, and feed the output back into the network between each two consecutive runs, i.e. replace the lag 1 input of the later run with the output of the earlier run. Naturally, this workaround is not by any means a full substitute for the multi-step-ahead forecasting, as we are are using data already flawed with predictive inaccuracies to predict further data, thus cumulating the forecasting error.
+
+Another solution, suggested by Kaastra and Boyd \cite{Kaastra95}, is to maintain a specialised separate neural network for each individual leap.
+
+\section{Step 4: Choosing the Lags}
+
+The \textit{lags} describe the past values of the time series we with to forecast. More formally, the lags is a vector $ [i_1, i_2, \ldots i_n ]$ where $ n $ is the number of past values we want to base our prediction on and $ i_j $ specifies the offset of the $ j $-th past value, i.e. how far the past value is. As an example, consider the lags $ [ -4, -3, -2, -1 ] $. This means, we want to base our prediction on the past four values. Compare this with the lags\\
+$ [ -13, -12, -11, -10, -9, -8, -7, -6, -5, -4, -3 , -2, -1 ] $. Here we base our prediction on the past thirteen values (a whole year and an additional month). It is perfectly possible not to use the entire range of values between the maximum and minimum lag. For instance, we may decide to base our prediction on the past two values and this month's last year value, $ [ -12, -2, -1 ] $.
+
+For our forecasting session, we have devised a total of 21 different trials. Each trial is uniquely distinguished by the lags and the number of hidden neurons is prescribes. The following sets of lags were tried:
+
+\begin{enumerate}
+\item $ [ -2, - 1 ] $  
+\item $ [ -12, -11, -10, -9, -8, -7, -6, -5, -4, -3, -2, -1 ] $
+\item $ [ -14, -13, -12, -2, -1 ] $
+\item $ [ -13, -12, -2, -1 ] $
+\item $ [ -13, -12, -1 ] $
+\item $ [ -12, -2, -1 ] $
+\item $ [ -12, -1 ] $
+\end{enumerate}
+
+The sets of lags evolved as follows. Let us, for the purpose of this explanation, assume we wanted to forecast the values of the last year (1960) of the \textit{international airline passengers data} based on the previous eleven years (1949 -- 1959, both included) \footnote{As a matter of fact, this is exactly the way we carried out our experiment.}. Also, suppose we are about to forecast the number of passengers for January 1960 now.
+
+The \textbf{first attempt} was a na\"{i}ve one. We decided to let the multi-layer perceptron look for the way any month is related to the two months that immediately precede it. After we realised the data displays seasonal variations, the \textbf{second attempt} at forecasting the January 1960 was made. It took the whole year 1959 into consideration. Studying the trained network's configuration we realised that lags $ -11, -10, \ldots, -3 $ (from February 1959 to October 1959) bear little influence on the value being forecast. On the other hand, lags $ -14, \ldots, -12 $ (November and December 1958, and January 1959) influence the value of January 1960 much more significantly. This key observation is captured in our \textbf{third attempt}. The attempts \textbf{four}, \textbf{five} and \textbf{six} and \textbf{seven} each seek to narrow the set of dependencies even further, with the \textbf{seventh} attempt taking the key idea to the extreme.
+
+\section{Step 5: Building the Training, Validation and Testing Sets}
+
+The available data (e.g. the whole data set extracted from time series) is usually divided into three distinct sets -- the \textit{training}, \textit{validation} and \textit{test} sets. Of these, the \textit{training set} should be the largest and is used as first to train the neural network. The \textit{validation set}, containing observation not seen during the training, is used afterwards to evaluate the networks ability to generalise. After repeating this two-step process for neural networks with different architectures and with different training parameters, the model that performed best on the validation set is selected. This model is trained yet again, this time using both training and testing sets. The final model is accessed using the \textit{testing set}, which should consist of the most recent contiguous observations \cite{Kaastra95}. Note that after assessing the final model with the test set, you must not tune it any further.
+
+The observations contained in the training and validation sets are called \textit{within-sample}, as they are used, in one way or the other, to optimise the configuration of a neural network. On the other hand, the observations contained in the test set are called \textit{out-of-sample}, since the neural network is not allowed to adapt further as soon as it sees them.
+
+In our forecasting experiment, we have decided not to use the validation set, but instead choose the best model according to various statistics. Their choice is discussed in section \textit{Step 7: Selecting Criteria for Picking the Best Model}. Concerning the test set composition, we elected to follow the recommendations, and picked the last twelve observations.
+
+\section{Step 6: Determining Multi-layer Perceptron's Architecture}
+
+While the number of input neurons and output neurons is dictated by the lags and leaps respectively, the number of hidden layers and the number of hidden neurons comprising them remain open to experimentation.
+
+\subsection{Deciding on the Number of Hidden Layers}
+
+A neural network can, in theory, contain an arbitrary number of hidden layers. In practice however, networks with more than two hidden layers are seldom used. There are strong reasons not increase their number beyond this point. First, there is no need to do so, as theoretically, a network with one hidden layer is capable of approximating any continuous function, provided the hidden layer contains a sufficient number of hidden neurons. Practical applications seem to agree with theory, as the introduction of additional hidden layers could not be sufficiently justified. On the contrary, a greater number of them increase the computational time.
+
+However, the most serious is the danger of \textit{overfitting}. Overfitting happens when the number of synapses of a network is relatively high with respect to the size of the training set. Under such circumstances, the network is able to learn and reproduce every single training pattern individually, and there is no pressure on it to generalise. Overfitting is characterised by excellent within-sample measures of fit on one hand, and disappointing out-of-sample forecast accuracy on the other.
+
+Taking into consideration the length of the international airline passengers data and some experimentation, we have concluded that in order to eliminate the threat of overfitting, no more than one hidden layer will be used.
+
+\subsection{Deciding on the Number of Hidden Neurons in Each Hidden Layer}
+
+Deciding on the `ideal' number of hidden neurons is more or less a process of trial-and-error. Obviously, many rules of thumb have been proposed in literature, some of them relating the number of hidden neurons to the number of input neurons, others to the size of the training set. Of all we have come across, the following recommendation stood out as particularly insightful. According to Klimasauskas \cite{Klimasauskas93}, there should be at least five times as many training facts as weights, which sets an upper limit on the number of input and hidden neurons.
+
+Instead of attempting to implement any particular heuristic, we have decided to try out several possible numbers of hidden neurons with each set of lags. The only (upper) bound for this number was the number of input neurons determined by any particular set of lags.
+
+Note that in addition to the so-called \textit{fixed} approach where either a validation set or the human inspection determines the `best' number of hidden neurons, more advanced techniques exist. These are based on incremental \textit{addition} or \textit{removal} of hidden neurons during the training process itself.
+
+Regardless of the method used to select the range of hidden neurons to be tested, the rule is to always select the network that performs best on the testing set with the least number of hidden neurons \cite{Kaastra95}
+
+\subsection{Deciding on the Activation Functions for Each Non-input Layer}
+
+Generally speaking, when trying to forecast markets, non-linear activation functions are preferred to linear activation functions. Two commonly used activation functions are the \textit{standard sigmoid function}, or \textit{logistic function} and the \textit{hyperbolic tangent function}. A \textit{linear function} (e.g. the \textit{identity function}) can also be used, but only in the output layer.
+Depending on the choice of the output layer's activation function, the data may require scaling so that it is consistent with the range of this function.
+
+\smallskip
+
+Both logistic and linear activation functions have been tried as the output layer activation functions in our experiment. Although we expected the logistic function to perform much better, we have arrived to a conclusion, that provided the data is suitably scaled, they are practically interchangeable.
+
+\section{Step 7: Training the Multi-layer Perceptron}
+
+This is the point where the features of the underlying \textbf{NeuralNetwork} class library are fully appreciated. There is no need to specify the parameters of the Backpropagation learning algorithm (namely the learning rate and the momentum), as these will be maintained by the algorithm itself. The teacher also minimises the chance of getting stuck in a local minimum by restarting itself a number of times and running the entire adaptation process using a (generally) different set of initial synaptic weights. Only the computational budget (the maximum number of runs and the maximum number of iterations in a run) and the required level of accuracy has to be specified.
+
+\smallskip
+
+To train the multi-layer perceptrons in our experiment, we have found that the maximum number of runs need not be higher than 10, as this already accounts for a fairly satisfactory chance the training has not been trapped in a local minimum in each of these rounds. We also limited the maximum number of iteration to undertake during each run by 10000. It has been observed that such a generous computational budget can accommodate for a satisfying decline of network error. To force the algorithm into the exhaustion of the entire computational budget, we decided to require the absolute level of accuracy\footnote{Naturally, this level of accuracy could hardly ever be met, no matter the extent of the computational budget.}.
+
+\section{Step 8: Selecting Criteria for Picking the Best Model}
+
+Selecting criteria for picking the best model out of many that have undergone training is a tricky task, partially because so many have been suggested. Yet again, there is no such thing as the universal criterion that would be applicable in every possible situation. The closest one can hope to get is the \textit{residual sum of squares (RSS)}:
+$$ RSS = \sum_{i = 1}^{n}{e_i^2}, $$
+where $ e_i = y_i - f(x_i) $. As this depends on the number of training patterns presented (which is generally different for every trial in a forecasting session), it is difficult to compare the suitability of differently lagged models with each other. A normalised version of RSS, the \textit{residual standard deviation (RSD)} removes this obstacle:
+$$ RSD = \sqrt{\frac{RSS}{n}} $$
+where $ n $ is the number of observations presented to the network during the training session.
+
+Notice that since these statistics can only become smaller as the model becomes larger, they have a tendency to favour colossal models with a multitude of synapses. However, as we've already seen, the larger the model, the higher the more imposing the danger of overfitting is. Thus, a criterion that would take the size of the neural network model into consideration was sought.
+
+\subsection{Information Criteria}
+
+Fortunately, a whole group of evaluation criteria that address the issue of penalising the gigantic neural network models exists -- the so-called \textit{information criteria}:
+\begin{itemize}
+\item \textit{Akaike information criterion} ($ AIC = n \log{\frac{RSS}{n}} + 2p $),
+\item \textit{bias-corrected Akaike information criterion} ($ AIC_C = AIC + \frac{2(p + 1)(p + 2)}{(n - p - 2)}$),
+\item \textit{Bayesian information criterion} ($ BIC = n \log{\frac{RSS}{n}} + p + p \log{n} $), and
+\item \textit{Schwarz Bayesian criterion} ($ SBC = n \log{\frac{RSS}{n}} + p \log{n}$).
+\end{itemize}
+
+Note that for all of these criteria, the lower the value, the better the forecasting model. Also note that while the Akaike information criterion (AIC) punishes the extra parameters rather lightly, its bias-corrected version (AICC) and the Bayesian information criterion (BIC) do so much more severely. All of these are offered by the \textbf{NeuralNetwork} class library.
+
+\section{Results}
+
+In this section we present the original results of our experimentation. We will be referring to the three experiments as described in the \textit{Step 1: Preprocessing the Data} section. The results of these experiments (forecasting sessions) are stored in three forecasting logs: \texttt{airline\_data\_raw.forecastinglog} stores the results of the firs experiment,\\
+\texttt{airline\_data\_scaled\_0.01.traininglog} contains the results of the second experiment and finally \texttt{airline\_data\_scaled\_0.001.traininglog}\\
+stores the results of the third experiment. In the following subsections, we will take a closer look at the results contained in these forecasting logs.
+
+\subsection{First Experiment}
+
+In the first experiment (refer to the \texttt{airline\_data\_raw.forecastinglog}), the multi-layer perceptrons were fed \textit{raw untransformed data}. This necessitated the use of a \textit{linear activation function} in the output layer. The results yielded by this experiment are downright disappointing. When forecasting time series whose values are expected to fall somewhere between 0 and 500, the out-of-sample RSD of approximately 211 (achieved by the best models) is utterly unacceptable. It looks like the multi-layer perceptrons got overwhelmed by the high outputs of the network to the point where no effective adaptation could take place. In this experiment, we have proven that at least some pre-processing of the data has to be carried out before it is presented to a multi-layer perceptron.
+
+\subsection{Second Experiment}
+
+After it became apparent the multi-layer perceptrons in the first experiment could not deal with raw data, we decided to scale the data by the factor of 0.01. Since their range was still not compatible with the logistic activation function, we had no other choice but to stick with the identity output layer activation function. Admittedly, we did not expect any noticeable improvement. In the end, we were pleasantly surprised just how much this simple data transformation simplified the perceptrons' job. This time, as the data was scaled by a factor of 0.01, we were expecting the forecast values to fall between 0 and 5. The most successful model achieved an out-of-sample RSD of 0.166. Scaling this value back, we obtain the best out-of-sample RSD of 16.6 with respect to the raw data. That is almost 13 times better that the first, na\"{i}ve experiment. This is a very satisfying result, especially considering it was delivered by one of the smallest model, using only two inputs.
+
+The explanation lies in the importance of these inputs. The first input the last year's value for the same month (lag -12) and the second input is the most recent month (lag -1). Surely, these are the most helpful month to look at when dealing with economic time series containing trend and seasonality.
+
+However, the most important question we posed was whether the information criteria we were looking at, could point us in the right direction. In other words, whether they can, by looking at the models' performance on the within-sample (training set) observations and taking their size into consideration, identify the best models that would perform the best on the out-of-sample (test set) observations. The idea these criteria seem to be exploiting is the \textit{penalisation} of high numbers of parameters (weights). They assume such colossal models are bound to be over-fitted and will inevitably perform poorly on the out-of-sample observations.
+
+In the second experiment (refer to the\\
+\texttt{airline\_data\_scaled\_0.01.forecastinglog}), the AIC picked the  ``-13, -12, -1; 2'' model (AIC value of -527) and the BIC picked the model ``-13, -12, -1; 1'' (BIC value of -502). Notice that these two criteria picked very similar candidates, differing only in one hidden neuron. However, after the forecasting accuracies of all models was measured (by presenting them with out-of-sample test set observations), we found out that both the AIC-favourite (scoring 0.219) and the BIC-favourite (scoring 0.244) were outperformed.  Several other models achieved lower out-of-sample RSDs, most notably by the ``-12, -1; 2'' model, which achieved the value of 0.166. Therefore in this particular forecasting session, the information criteria, despite choosing relatively acceptable models, failed to identify the best ones.
+
+\subsection{Third Experiment}
+
+In the last experiment (refer to the\\
+\texttt{airline\_data\_scaled\_0.001.traininglog}), we have decided to try out the logistic function as the output layer activation function. For this, we had to scale the data so that they all fit into the interval $[ 0, 1 ]$. Hence a scaling coefficient of 0.001 was chosen
+
+ During this forecasting session, the lowest AIC value was achieved by the model ``-13, -12, -1; 2'' (AIC value of -1072), the very same model as in the previous experiment. The BIC too repeated its choice from the second experiment, and again picked the ``-13, -12, -1; 1'' model (BIC value of -1043). These two favourites achieved the out-of-sample RSDs of 0,023 and 0.026 respectively. In comparison with other models' achievements, these are again not very convincing results. This time, the ``-14, -13, -12, -2, -1; 4'' model outperformed all with the out-of-sample RSD of 0.020.
+ 
+A point worth noting is that in this forecasting scenario, the difference in forecast accuracies between the models picked by the information criteria and those that eventually performed the best was less striking.
+
+A question we were asking was, whether the information criteria can identify the models that would eventually perform the best when their forecast accuracies are measured. Unfortunately, we have to conclude that although their respective choices were not totally misguided (both the ACI-favourite and the BIC-favourite performed moderately well), neither the Akaike information criterion nor the Bayesian information criterion could be entrusted with the task of choosing the best forecasting model.
+
+A possible solution, not further investigated in this work, is to assemble a `panel of experts' (a set of information criteria with `weighted' opinions on the matter) whose overall predictive potential will hopefully be greater than that of any of its constituting members. 

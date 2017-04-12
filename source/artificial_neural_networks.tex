@@ -1,0 +1,105 @@
+\chapter{Artificial Neural Networks}
+\addcontentsline{toc}{chapter}{Artificial Neural Networks} % TODO : Necessary?
+
+An \textit{artificial neural network (ANN)}, or simply a \textit{neural network (NN)} is a computational model imitating the structure and/or functionality of biological neural networks. It processes information using a \textit{connectionist computation paradigm}. A high-quality source of neural network theory \cite{Sima96} is relied on and used extensively throughout this chapter. 
+
+Neural networks are essentially simple mathematical models defining a function
+$$ f : \mathbb{R}^{n_i} \rightarrow \mathbb{R}^{n_o}, $$
+where $ n_i \in N $ is the number of \textit{input neurons} and $ n_o \in N $ is the number of \textit{output neurons}. Each neural network model (or type)
+corresponds to a class of such functions $ \mathcal{F} $. Naturally, a particular neural network instance corresponds to a particular function $ f \in \mathcal{F} $.
+
+The function $ f $ (the output of the network) is defined as a composition of other functions $ g_i $ which are themselves compositions of other functions. At the bottom of the composition hierarchy are simple values (the inputs of the network). The function $ f $, however complex, can therefore be composed from an arbitrary number of very simple functions. This notion can be conveniently illustrated by an oriented graph.
+
+\begin{itemize}
+\item The graph itself represents the actual function $ f $,
+\item the graph's vertices represent the functions $ g_i $, and
+\item the graph's (oriented) edges represent the dependencies among functions $ g_i $. An edge from vertex (function) $ g_i $ to vertex (function) $ g_j $ represents the fact that the function $ g_j $ requires the output of the function $ g_i $ as one of its inputs.
+\end{itemize}
+
+Since the inspiration for artificial neural networks comes from biological neural networks, the terminology has been assimilated as well. We use the term \textit{neural network} to refer to the function $ f $ (the graph itself), \textit{neuron} to refer to any of its comprising functions $ g_i $, (any of the graph's vertices) and \textit{synapse} to refer to any of the involved dependencies (any of the graph's edges).
+
+The composition of function $f$ as well as the compositions of non-input functions $g_i$ employ some \textit{aggregation function} and some \textit{activation function}:
+$$ f(x) = f_{activation}(f_{aggregation}([w_i],[g_i(x)])). $$
+
+The \textit{aggregation function} defines the way in which the inputs of a neurons are aggregated into its \textit{inner potential} (or \textit{input}). By far, the most widely used aggregation function is the \textit{weighted sum} -- the linear combination of synapse weights $ w_i $ and neuron's inputs $ g_i $:
+$$ f_{aggregation}([w_i],[g_i(x)]) = \sum_{i}{w_i g_i(x)}. $$
+
+The \textit{activation function}, or \textit{transfer function}, defines the way in which a neuron's inner potential activates its \textit{state}, in other words, the way in which the neuron's input is transferred to its output. It is an abstraction representing a rate of action potential firing in the cell. The most commonly used activation functions are the \textit{logistic function)}:
+$$ f_{activation}(x) = \frac{1}{1 + e^{-x}} $$
+and \textit{hyperbolic tangent}:
+$$ f_{activation}(x) = \frac{e^{2x} + 1}{e^{2x} - 1}. $$
+
+They both continuously approximate the \textit{Heaviside step function}, also known as the \textit{unit step function}, while being differentiable. This is an essential property when we want to train the network using a learning algorithm implementing a form of gradient descent.
+
+Sometimes a \textit{linear function} with positive slope (e.g. the \textit{identity function}) is used as an activation function in the output layer. This overcomes the range limitation imposed by the two previously mentioned functions. While the \textit{logistic logistic} function and the \textit{hyperbolic function} can yield only values from intervals $ (0, 1) $ and $ (-1, 1) $ respectively, the rage of a linear function is unbounded.
+
+Depending on whether their graph is a DAG or not, neural networks can be classified into two main classes:
+\begin{itemize}
+\item \textit{feedforward neural networks} (their graph is a DAG) and
+\item \textit{recurrent neural networks} (their graph is not a DAG).
+\end{itemize}
+
+As this thesis focuses on implementing a time series forecasting method, we will not attempt to identify any causal processes that would bear an influence on the process being predicted. Thus, we will not have to account for the influence the predicted process might have on the causal processes in turn. For this reason, a recurrent neural network will not be necessary and a simple feedforward neural network will suffice.
+
+%%%%% FEEDFORWARD NEURAL NETWORK %%%%%
+\section{Feedforward Neural Networks}
+
+A \textit{feedforward neural network (FNN)} is a neural network where connections (synapses) between units (neurons) do not form a directed cycle (i.e. their graph is a DAG). This type of network only propagates data from earlier processing stages to later processing stages.
+
+The simplest of all feedforward neural network models (and neural networks as such) is the \textit{single-layer perceptron (SLP)}, or simply \textit{perceptron}.  A perceptron consists of a single layer of output neurons, also known as \textit{linear threshold units}, to which the inputs are fed directly via a matrix of weights. To train a perceptron, a simple learning algorithm, implementing a form of gradient descent, the \textit{delta rule}, can be used \cite{Wikipedia-Feedforward_neural_network}.
+
+Unfortunately, perceptron is only capable of correctly classifying training patterns that are \textit{linearly separable}. Unfortunately this is rarely the case in practical situations. In fact, trivial mappings exist that are \textit{linearly inseparable}. Interest in neural networks hit a rock bottom in 1969 when Marvin Minsky and Seymour Papert showed that it was impossible for a perceptron to learn even the most trivial of all linearly inseparable training sets, the \textit{XOR logical function}.
+
+%%%%% MULTI-LAYER PERCEPTRON %%%%%
+\section{Multi-layer Perceptron}
+
+Arguably the most famous and the most widely used neural network model is the \textit{multi-layer perceptron (MLP)} model. This model is a generalisation of the single-layer perceptron for an architecture with hidden layers. In other words, apart from the input and output layers, the multi-layer perceptron can contain an arbitrary (although customarily very small) number of hidden layers. The introduction of hidden layers removes the constraint imposed by the single-layer perceptron model regarding the linear separability of the data set. Firstly, we will describe the basic features of multi-layer perceptron and then we will suggest some possible modifications.  
+
+%%%%% MULTI-LAYER PERCEPTRON : ORGANIZATIONAL DYNAMICS %%%%%
+\subsection{Organizational Dynamics}
+
+The organizational dynamics of a multi-layer perceptron (usually) specifies a fixed multi-layer feedforward neural network topology. Since the exact meaning of hidden neurons and their synapses (necessary to design a specialized topology) is unknown, a two-layer or a three-layer network is used as the standard.
+
+The following notation we will be using to describe multi-layer perceptrons is adapted from % TODO : Cite!:
+
+\begin{itemize}
+\item $X$ denotes the set of all $n$ input neurons,
+\item $Y$ denotes the set of all $m$ output neurons,
+\item $i$, $j$, etc. are the indices used to denote neurons,
+\item $\xi_i$ denotes the real inner potential (input) of the neuron $i$,
+\item $y_i$ denotes the real state (output) of the neuron $i$,
+\item $w_{ji}$ denotes the the real synaptic weight of the connection from the neuron $i$ to the non-input neuron $j$,
+\item $w_{j0} = -h_j$ denotes the bias (the threshold $h_j$ with the opposite sign) of the non-input neuron $j$ corresponding to the formal unit input $y_0 = 1$,
+\item $j_\leftarrow$ denotes the set of all neurons for which a connection from them to the neuron $j$ exists, hence the input neurons of the neuron $j$ (including the formal unit input $0 \in j_\leftarrow$), and
+\item $j^\rightarrow$ denotes the  set of all neurons, for which a connection from neuron $j$ to them exists, hence the output neurons of the neuron $j$ (i.e. the neurons for which the neuron $j$ is an input neuron).
+\end{itemize}
+
+%%%%% MULTI-LAYER PERCEPTRON : ACTIVE DYNAMICS %%%%%
+\subsection{Active Dynamics}
+
+In the active mode, the multi-layer network evaluates the function:
+$$ y(w) : \mathbb{R}^n \rightarrow (0, 1)^m, $$
+determined by the synaptic weight configuration $ w $, for a given input. The computation runs according to the following discrete active dynamics. In time 0, the respective states of the input neurons $ y_i $ ($ i \in X $) are assume the values of the network input and the remaining neurons have their states undefined. In time $ t > 0 $, the real values of inner potentials
+$$ \xi_j = \sum_{i \in j_\leftarrow}{w_{ji}y_{i}} $$
+of all neurons $ j $, whose inputs (from $ j_\leftarrow $) have their state determined, are calculated. This means that in the time $ t $, the neurons in the $ t $-th layer are updated. Using the inner potential $ \xi_j $, the real state $ y_j = \sigma(\xi_j) $ of the neuron $ j $ is determined by a differentiable activation function $ \sigma : \mathbb{R} \rightarrow (0, 1) $ of standard sigmoid (continuously approximating the Heaviside function):
+$$ \sigma(\xi) = \frac{1}{1 + e^{-\lambda \xi}}. $$
+
+The differentiability of the transfer function and the differentiability of the network function that follows from it is essential for the backpropagation learning algorithm. The real parameter of \textit{gain} $ \lambda $ determines the non-linear growth (for $ \lambda < 0 $ decay) of the standard sigmoid in the neighbourhood of zero (for $ \lambda \rightarrow \infty $ we get the Heaviside step function), i.e. the measure of `decisiveness' of a neuron \cite{Sima96}. In the basic model, $ \lambda = 1 $ is usually assumed. However, generally every non-input (i.e. hidden or output) neuron $ j $ can have a different gain $ \lambda_j $ (and therefore a different activation function $ \sigma_j $).
+
+This way, provided that the multi-layer network is acyclic (connected) network, all neurons' outputs are calculated one by one. The active mode is over, when the state of all neurons in the network (especially the output neurons) is established. The output neurons yield the network output, i.e. the value of the network function for a given input.
+
+%%%%% MULTI-LAYER PERCEPTRON : ADAPTIVE DYNAMICS %%%%%
+\subsection{Adaptive Dynamics}
+
+In the adaptive mode, the desired network function of multi-layer perceptron is given by a training set:
+$$ T = \{(\vec{x}_k, \vec{d}_k) | \frac{\vec{x}_k = (x_{k1}, \ldots, x_{kn}) \in \mathbb{R}^n}{\vec{d}_k = (d_{k1}, \dots, d_{km}) \in (0,1)^m}; k = 1, \ldots, p\}, $$
+where $ x_k $ is a real input of the $ k $-th training pattern and $ d_k $ is the corresponding real desired output given by the teacher. The goal of the adaptation is that for each input $ x_k; k = 1, \ldots, p $ from the training set, the network (in its active mode) answers with the expected output, i.e.:
+$$ \vec{y}(\vec{w},\vec{x}_k) = \vec{d}_k; k = 1, \ldots, p. $$
+
+The network error $ E(w )$ with respect to a training set is defined as a sum of the partial network errors $ E_k(w) $ with respect to the individual training patterns and depends on the configuration of the network $ w $:
+$$ E(\vec{w}) = \sum_{k = 1}^{p}{E_k(w)}. $$
+
+The partial network error $ E_k(w) $ with respect to the $ k $-th training pattern is proportional to the sum of the squares of the differences between the actual values of the network output for the $k$-th training pattern and the corresponding expected output values of that pattern:
+$$ E_k(\vec{w}) = \frac{1}{2} \sum_{j \in Y}{(y_j(\vec{w}, \vec{x}_k) - d_{kj})^2}. $$
+
+The goal of the adaptation is to minimise the network error in the weight space. Since the network error directly depends on the complicated non-linear composite function of the multi-layer network, this goal poses a non-trivial optimisation problem. In the basic model, a simple gradient descent method (requiring the differentiability of the error function) is employed to solve it \cite{Sima96}.

@@ -1,0 +1,67 @@
+\chapter{MarketForecaster (Console Application)}
+\addcontentsline{toc}{chapter}{MarketForecaster (Console Application)} % TODO : Necessary?
+
+\texttt{MarketForecaster} is a console application for forecasting markets using simple time series prediction. It is designed to be as lightweight as possible, delegating all the "grunt work" to the underlying NeuralNetwork class library.
+
+%%%%% REQUIREMENTS DECUMENTATION %%%%%
+\section{Requirements Specification}
+
+\textbf{MarketForecater} is a market forecasting console application. It enables the user to
+\begin{itemize}
+\item build raw time series by loading them from a file,
+\item preprocess the loaded time series (e.g. scale or log it),
+\item forecast (raw or preprocessed) time series using different teachers, and
+\item execute forecasting sessions, and
+\item log the results of the forecasting session into a file.
+\end{itemize}
+
+\subsection{Supported Features}
+
+Currently, only \textit{one-step-ahead forecasts} are supported, i.e. at any given moment in time, only the immediate next time series element can be predicted. However, should the \textit{multistep-ahead forecasts} be required, there exists an intuitive way to simulate them using one-step-ahead forecasts. We just need to run one-step-ahead forecast for each step we want to obtain, and feed the output back into the network between each two consecutive runs, i.e. replace the lag 1 input of the later run with the output of the earlier run. Naturally, this workaround is not by any means a full substitute for the multistep-ahead forecasting, as we are are using data already flawed with predictive inaccuracies to predict further data, thus cumulating the forecasting error. 
+
+%%%%% DESIGN AND ARCHITECTURE DOCUMENTATION %%%%%
+\section{Design and Architectre Documentation}
+
+%%%%% TECHNICAL DOCUMENTATION %%%%%
+\section{Technical Documentation}
+
+\textbf{MarketForecaster} is a class library written in C\# programming language (version 3) and targeted for Microsoft .NET Framework (version 3.5). It is being developed in Microsoft Visual C\# 2008 Express Edition as a part of the \textbf{MarketForecaster} colution - an entire solution aimed at forecasting markets using artificial neural networks.
+
+\subsection{Dependencies}
+
+\textbf{MarketForecaster} uses the "in-house" developed \textbf{NeuralNetwork} class library.
+
+\subsection{Using \textbf{MarketForecaster}}
+
+To use MarketForecaster, ...
+
+%%%%% END USER DOCUMENTATION %%%%%
+\section{End User Documentation}
+
+\subsection{Step 1 : Building the Time Series}
+
+First and foremost, it is necessary to specify the file from which the time series should be loaded - the \texttt{.timeseries} file. The file is allowed to contain only real numbers separated by a \textit{single space character}. Whether they are all stored in a single line or each on a separate line, or whether the file contains blank lines is irrelevant. This leniency regarding the \texttt{.timeseries} file format allows for an arbitrary tabulation of contained data, e.g. to be easily interpreted by a human reader.
+Taking our \texttt{airline\_data.timeseries} file as an example, it contains 12 rows (representing years from 1941 to 1960) each consisting of 12 real values (each representing the monthly total of international airline passengers).
+
+\noindent \texttt{RawTimeSeries rawTimeSeries = new RawTimeSeries( "airline\_data.timeseries" );}
+
+The time series is now loaded and ready to be (preprocessed and) forecast.
+
+\subsection{Step 2 : Preprocessing the Time Series}
+
+Optionally, we may want to preprocess the time series before we attempt to forecast it. In many situations, this step becomes a compulsory one, as it is impossible to reasonably forecast the raw time series.
+
+\noindent \texttt{double scalingFactor = 0.01;//
+ScaledTimeSeries scaledTimeSeries = new ScaledTimeSeries( rawTimeSeries, scalingFactor );}
+
+Instead of simply scaling the data, the user may elect to transform the data by taking the (natural) logarithms of the values.
+
+In any case, the data is now preprocessed (scaled or logged) and ready to be forecast.
+
+\subsection{Step 3 : Specifying the Teacher}
+
+The default teacher to be used during the training session is the Backpropagation teacher. However, it is easily replaceable by any other teacher the underlying NeuralNetwork class library supports.
+
+\subsection{Step 4 : Specifying the Sets of Lags and the Numbers of Hidden Neurons for the Forecasting Session}
+
+\subsection{Step 5 : Executing the Forecasting Session}

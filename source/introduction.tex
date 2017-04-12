@@ -1,0 +1,29 @@
+\chapter{Introduction}
+
+\textit{``The only function of economic forecasting is to make astrology look respectable.''}
+
+\medskip
+
+\hfill \textit{John Kenneth Galbraith}
+
+\bigskip
+
+The last few decades of research into the field of artificial neural networks have firmly established their status as potent computational models. Because of their human-like approach to solving tasks, they have traditionally been employed in areas where it is extremely difficult at best, if not downright impossible, to formulate an \textit{exact} step-by-step procedure which is to be followed to obtain the results. In other words, the artificial neural networks excel in areas where the conventional Von Neumann computational models are doomed to fail. Such areas are characterised by tasks that are easily solved by humans. However, if they were asked to describe how exactly they had arrived at the conclusion, they would probably not be able to put their finger on the particular steps involved. These areas include (but are not limited to) pattern classification and prediction.
+
+\medskip
+
+The forecasting itself goes a somewhat longer way into the past. Practitioners of all sorts of disciplines, be those scientific, engineering or business, have always placed a big emphasis on the importance of being able to predict the future with at least a certain degree of accuracy. The instances of areas where this skill (or lack of thereof) may have a fundamental impact include planning, scheduling, purchasing, strategy formulation, policy making, and supply chain operations \cite{Zhang04}. It is no wonder then, that there is a high demand for reliable forecasting methods and a considerable effort has been spent to both perfect the already existing ones and search for new alternatives.
+
+The earliest attempts at forecasting involved methods that are linear in nature. This linearity enabled their easy implementation and allowed their straightforward interpretation. However, it soon became apparent that they are hopelessly inadequate to describe the complex economic and business relationships. Being linear, they are simply unable to capture any non-linear dependencies among economic variables, which is necessary if one is hoping to design a trustworthy predictive model. The researchers began their search for alternative, non-linear methods and turned their attention to artificial neural networks among others.
+
+\medskip
+
+The feature of artificial neural networks that appealed the most to forecasters was their inherent \textit{non-linearity}. They correctly postulated that this can turn them into promising forecasting tools, able express the complex underlying relationships present in almost any real-world situation. Furthermore, when using the artificial neural networks, the ability to model linear processes does not have to be relinquished, as they are able to model these as well.
+
+Naturally, non-linearity is not the only convenient property of this computational model. For instance, it has been proven by theoreticians that an artificial neural networks are capable of approximating any continuous function, provided certain requirements imposed on their structure are met. This truly is an essential characteristic that fully justifies the inclusion of artificial neural networks into the top echelon of forecasting methods. Any such method must be able to accurately capture the causal relationship between the predicted process and processes that influence it. As a bonus to what has already been mentioned, artificial neural networks are ``data-driven non-parametric methods that do not require many restrictive assumptions on the underlying process from which the data is generated'' \cite{Zhang04}. This is also a valuable property, since the more parameters a model requires to be specified, the greater the chance of going astray by mis-specificating any of those.
+
+Since the first attempts at applying artificial neural networks to forecasting, the field of \textit{neural forecasting}, as it is commonly referred to, has expanded to one of the major application areas of artificial neural networks \cite{Zhang04}.
+
+\medskip
+
+The remainder of this work is organized as follows. In Chapter 2, we discuss what is meant by `forecasting markets', define time series and classify the existing forecasting methods. Chapter 3 lays the foundations for our experimentation by providing a theoretical background on the artificial neural networks. Arguably, the most interesting aspect of artificial neural networks -- learning -- has been devoted a chapter on its own, Chapter 4. Chapters 5 and 6 present the \textbf{NeuralNetwork} class library and the \textbf{MarketForecaster} console application respectively. The work culminates in Chapter 7, in which we elaborate on the application of artificial neural networks to market forecasting. This chapter can be considered a focal point of the thesis, as it contains the description of experiments we carried out using the \textbf{NeuralNetwork} class library and the \textbf{MareketForecaster} console application. This is also the place where we present the conclusions we have reached in our experimentation.

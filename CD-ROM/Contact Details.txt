@@ -1,0 +1,5 @@
+Forecasting Markets using Artificial Neural Networks
+
+Lukáš Kúdela
+
+lukas.kudela@gmail.com

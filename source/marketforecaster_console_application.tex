@@ -1,0 +1,107 @@
+\chapter{MarketForecaster (Console Application)}
+
+%%%%% REQUIREMENTS DECUMENTATION %%%%%
+\section{Requirements Specification}
+
+\textbf{MarketForecaster} is a console application for forecasting markets using simple time series prediction. It is designed to be as lightweight as possible, delegating all the `grunt work' to the underlying \textbf{NeuralNetwork} class library.
+
+%%%%% TECHNICAL DOCUMENTATION %%%%%
+\section{Technical Documentation}
+
+\textbf{MarketForecaster} is a console application written in C\# programming language (version 3) and targeted for Microsoft .NET Framework (version 3.5). It was developed in Microsoft Visual C\# 2008 Express Edition as a part of the \textbf{MarketForecaster} solution - an entire solution aimed at forecasting markets using artificial neural networks.
+
+\subsection{Dependencies}
+
+\textbf{MarketForecaster} console application uses the \textbf{NeuralNetwork} class library. This has been designed and developed specifically to support the \textbf{MarketForecaster} console application and is a part of the \textbf{MarketForecaster} solution. \textbf{MarketForecaster} console application does not require any third-party class libraries.
+
+%%%%% END USER DOCUMENTATION %%%%%
+\section{End User Documentation}
+
+\textbf{MarketForecaster} console application is launched from command line takes (exactly) three arguments:
+
+\medskip
+
+\begin{verbatim}
+MarketForecaster.exe
+    airline_data_scaled_0,01.timeseries
+    airline_data.forecastingsession
+    airline_data_scaled_0,01.forecastinglog
+\end{verbatim}
+
+\subsection{Argument 1 : The Time Series File Name}
+
+The first argument we need to provide is the name of the file from which the time series will be loaded. This file has to conform to the \texttt{timeseries} file format.
+
+\paragraph{The \texttt{timeseries} file format} describes the way a time series is stored in a file. The most important characteristic is that a single \texttt{timeseries} file can not store more than one time series and that a single time series can not be stored in more than one file. Thus, a \texttt{timeseries} file always contains exactly one time series. A \texttt{timeseries} file is allowed to contain only real numbers separated by \textit{exactly one} space character. Whether they are all stored in a single line or each on a separate line, or whether the file contains blank lines is irrelevant. This leniency in \texttt{timeseries} file format specification allows for an arbitrary tabulation of contained data, e.g. to be easily interpreted by a human reader. Taking our \texttt{airline\_data.timeseries} file as an example, it contains 12 rows (representing years from 1949 to 1960) each consisting of 12 real values (each representing the monthly total of international airline passengers).
+
+Please note that once a time series is loaded, no preprocessing of the data takes place. Any preprocessing should therefore be carried out before the time series is loaded. Also notice that, since the time series preprocessing can easily be handled by simple scripts, we have decided that a similar functionality in the \textbf{MarketForecaster} would have been rather redundant. 
+
+\subsection{Argument 2 : The Forecasting Session File Name}
+
+The second argument we need to provide is the name of the file from which the forecasting session will be loaded. This file has to conform to the \texttt{forecastingsession} file format.
+
+\paragraph{The \texttt{forecastingsession} file format} describes the way a forecasting session is stored in a file. The most important aspect is that a single \texttt{forecastingsession} file can store an arbitrary amount of so-called \textit{(forecasting) trials}. Each trial is stored on a separate line, so the\\ \texttt{forecastingsession} file is, in effect, a row-oriented batch file. Here is how a single row from \texttt{forecastingsession} file looks like:
+
+\medskip
+
+\begin{verbatim}
+12; -4, -3, -2, -1; 0; 1
+\end{verbatim}
+
+\medskip
+
+We will refer to this row when describing the format of a trial.
+
+The motivation for grouping trials into a forecasting session is twofold. First, it \textit{automates} the process of launching multiple trials. Second, as there is one-to-one relation between a forecasting session and a forecasting log (described in the following subsection), the results of all trials stored in one forecasting session are logged into a single file. Being stored in a single file, their details and achievements can be compared and contrasted with ease.
+
+\paragraph{The \textit{trial} format} consists of four fields separated by semicolon:
+\begin{enumerate}
+\item the first field specifies the actual number of forecast, i.e. the size of the test set,
+\item the second field lists the lags,
+\item the third field lists the leaps, and
+\item the fourth field specifies the number of hidden neurons of a multi-layer perceptron (containing one hidden layer) used in the trial.
+\end{enumerate}
+
+It is not necessary for the lags and leaps to be ordered in ascending fashion, although following this convention is recommended as it will contribute to the clarity of the \texttt{trainingsession} file.
+
+Currently, only one-step-ahead forecasts are supported, i.e. at any given moment in time, only the immediate next time series element can be predicted. See discussion in \textit{Choosing the Leaps} section of \textit{Applying Artificial Neural Networks to Market Forecasting} chapter for a way to overcome this limitation.
+
+Having familiarized ourselves with the trial format, the example above can be interpreted as follows. Forecast the last 12 months of the time series (the last year) taking the values at lags 4, 3, 2 and 1 as the input values and the value at leap 0 (the immediate future) as the output value (one-step-ahead forecasts). Use a multi-layer perceptron with 1 neuron comprising the hidden layer.
+
+Typically, all trials constituting a forecasting session will attempt the same number of identically leaped forecasts (their first and third fields' values will match). However, to achieve this, they will usually attempt to use differently lagged variables (second column) and different numbers of hidden neurons (fourth column) in the multi-layer perceptron.
+
+\subsection{Argument 3 : The Forecasting Log File Name}
+
+The third argument we need to provide is the name of the file into which the forecasting log will be saved. The training log will be created if the file does not already exist or overwritten otherwise. The forecasting log produced by the \textbf{MarketForecaster} console application, once created, conforms to the \texttt{forecastinglog} file format.
+
+\paragraph{The \texttt{forecastinglog} file format} describes the way a forecasting log is stored in a file. The most important characteristic is that by the time the execution of the forecasting session is over, the forecasting log will have contained exactly the same number of entries as is the number of trials comprising the forecasting session. As the \texttt{forecastingsession} file format is row-oriented (with each row representing one trial), the \texttt{forecastinglog} file format is row-oriented as well (with each row representing one entry). Naturally, the n-th row of the \texttt{forecastinglog} file (excluding the header) contains an entry regarding the trial contained in the n-th row of the\\
+\texttt{forecastingsession} file. Here is how a single row from the \texttt{forecastinglog} file looks like\footnote{Please take into consideration that due to the length of the entry being greater than the width of this page, it has been typeset into three lines. See the actual example of a \texttt{traininglog} file included on the CD-ROM.}:
+
+\medskip
+
+\begin{verbatim}
+-4, -3, -2, -1; 128; 1; 7;
+    10,4416889220462; 0,285614591194998;
+    -306,79666181207; -279,832449964632;
+    3,31320667739403; 0,525452715712368}
+\end{verbatim}
+
+\medskip
+
+We will refer to this row when describing the format of an entry.
+
+\paragraph{The \textit{entry} format} consists of 10 fields separated by semicolon:
+\begin{enumerate}
+\item the first field lists the lags of the trial (-4, -3, -2, -1),
+\item the second field holds the number of effective observations presented to the multi-layer perceptron during the training session, i.e. the size of the training set (128),
+\item the third field holds the number of hidden neurons of the multi-layer perceptron (1),
+\item the fourth field holds the number of parameters, i.e. the number of synapses of the the multi-layer perceptron (7),
+\item the fifth field holds the residual sum of squares for the within-sample observations (10,4416889220462)
+\item the sixth field holds the residual standard deviation for the within-sample observations (0,285614591194998),
+\item the seventh field holds the Akaike information criterion\\
+(-306,79666181207),
+\item the eighth field holds the Bayesian information criterion\\
+(-279,832449964632),
+\item the ninth field holds the residual sum of squares for the out-of-sample observations (3,31320667739403),
+\item the tenth field folds the residual standard deviation for the the out-of-sample observations (0,525452715712368).
+\end{enumerate}

@@ -1,0 +1,354 @@
+\chapter{NeuralNetwork (Class Library)}
+\addcontentsline{toc}{chapter}{Neural Network (Class Library)} % TODO : Necessary?
+
+The \textbf{NeuralNetwork} class library presented in this chapter has originally been conceived as nothing more than an auxiliary software tool to be developed for the purposes of this thesis. However, over time it has evolved into a capable neural network class library and took a more central stage in the following text. It provides almost all the necessary functionality one needs when attempting to forecast markets by means of simple time series prediction. Only a rather compact project needs to be built on top of it, as will be evident later when we introduce the \textbf{MarketForecaster} console application.
+
+Instead of using a third-party neural network library, we have opted to design and implement our own. This decision was motivated by the following ideas.
+
+First and foremost, we wanted to initiate the work on a neural network library that would be \textit{following the principles of object oriented programming} as much as possible. In practice, this means that in situations where a trade-off between a design and performance issue had to be made, we mostly elected to protect the design at the cost of compromising performance. It has to be noted though that this approach is not a typical one, as the field of neuro-computing is characterised by a high demand for speed. We did not however attempt to compete with some of the fastest libraries currently available.
+
+We also wanted the library to be as \textit{accessible} to a researcher new to the field as possible. Some of the best neural network libraries in the world appear rather intimidating when first seen.\footnote{Of course this is perfectly justified by the amount of computational power they offer.} Our library, on the other hand, offers an \textit{elegant and straightforward API}, making it an ideal companion to a introductory class about neural networks.
+
+It is often said, that only by writing the code itself, a novice to the field can make sure he or she really understands the problem. So the last (but certainly not the least compelling) reason to write the library ourselves revolved around the desire to \textit{fully grasp the theoretical intricacies} involved in the field of neural networks. True, the task was challenging, but left us considerably more confident in our understanding.
+
+%%%%% REQUIREMENTS DOCUMENTATION %%%%%
+\section{Requirements Documentation}
+
+\textbf{NeuralNetwork} is an (artificial) neural network class library. It enables the user to
+\begin{itemize}
+\item build training sets,
+\item build neural networks,
+\item create learning algorithms (known as \textit{teachers} in the library jargon),
+\item train neural networks, and
+\item (most importantly) use the trained neural networks.
+\end{itemize}
+
+\subsection{Supported Features}
+
+Currently, labelled training sets, multi-layer perceptrons, one deterministic (Backpropagation), and three stochastic (based on genetic algorithm, simulated annealing and ant colony optimization) teachers and are supported `out-of-the-box'. Combinations of a labelled training set, a multi-layer perceptron and Backpropagation teacher make up for the majority of neural networks applications today. However, the library is designed to facilitate the extension of available classes by an experienced user, should he or she require a different type of training set, neural network or teacher.
+
+%%%%% DESIGN AND ARCHITECTURE DOCUMENTATION %%%%%
+\section{Design and Architecture Documentation}
+
+\textbf{NeuralNetwork}'s most important class is the \textsc{Network} class. It provides an abstraction of a multi-layer perceptron. Every multi-layer perceptron consists of a number of layers (the \textsc{Layer} class). At the very least it has to contain an input layer (the \textsc{InputLayer}) and the output layer (the \textsc{ActivationLayer} class). Furthermore, it may contain an arbitrary (although usually reasonably small) number of hidden layers (also represented by the \textsc{ActivationLayer} class). A decision has been made to provide a separate class for the input layer, as the input layer is not a full-fledged layer (e.g. it does not have an activation function).
+
+Any layer is basically just a collection of neurons (the \textsc{Neuron} class). The input layer holds together all the network's input neurons (the \textsc{InputNeuron} class), a hidden layer holds together a number of hidden neurons, and the output layer groups all the network's output neurons. Both hidden neurons and output neurons are abstracted into the \textsc{ActiavtionNeuron} class. Again, two distinct classes (although sharing a common base class) representing neurons exist as there are some characteristics unique to the input neurons (e.g. they can be assigned the input to the network) as well as other unique to the hidden and output neurons (e.g. the ability to evaluate their state).
+
+In a multi-layer perceptron, two neurons from neighbouring layers are connected by a (uni-directional) synapse (the \textsc{Synapse} class). All the synapses between any two (hence not necessarily neighbouring) layers are held together in a collection called \textit{connector} (the \textsc{Connector} class). The connector has no real analogy in the artificial neural network theory. Its existence is motivated by an attempt to make the process of building a network as straightforward as possible.
+
+Two design aspects of the \textbf{NeuralNetwork} class library are definitely worth mentioning: \textit{blueprints} and \textit{decorable components}.
+
+Despite our ultimate ambition to design a flexible library based on simple components (neuron, layer, synapse, connector, etc.) that could be assembled together to form custom-built neural networks, we have (at least for the time being) decided to impose certain restrictions on the process of building a neural network. As long as recurrent neural networks are not supported, it is imperative to prevent the user from building structures that would contain cycles in their graphs.
+
+Through a series of \textit{layer blueprints} (the \textsc{LayerBlueprint}, \textsc{InputLayerBlueprint} and \textsc{ActivationLayerBlueprint} classes) and \textit{connector blueprints} (the \textsc{ConnectorBlueprint} class) constituting a \textit{network blueprint} (the \textsc{NetworkBlueprint} class), the client can specify which layers are interconnected, i.e. he or she can determine the \textit{flow of information} in the network. There is no way to build a neural network directly, one has to use a valid blueprint. A positive externality is that a blueprint, once created, can be used to comfortably construct any number of (identically-structured) neural networks. This is especially handy in situations where population-based computational models are employed.
+
+All publicly available neural network class libraries we have seen tend to mix the concepts of neural networks and training algorithms, typically by tying a particular neural network type, say the multi-layer perceptron, with a particular learning algorithm. They do this by including state or functionality associated with that particular learning algorithm into the very definition of some concrete neural network class, e.g. a change in weight into a synapse. The problem is that while a change in weight is inherent to a synapse being trained by Backpropagation, it is \textit{not} inherent to a synapse as such. We have decided not to repeat this conceptual mistake and set out to \textit{completely separate} neural network from learning algorithms.  We anticipated that if we succeed, we might afford the luxury of having the same network (meaning the same instance during run-time) trained by as many teachers as we desire. Furthermore, a teacher once constructed may enjoy a more productive lifetime by teaching a whole `class' of neural networks.
+
+Simply inheriting a new class, say \textsc{BackpropagationNetwork} from the Network class was just not enough, because a Network object, once instantiated can not be `upgraded' to an instance of its classes sub-class. Thus a Network object could never become a \textsc{BackpropagationNetwork} for instance. We required a way to promote an already instantiated object into a new, more complex one, i.e. to enrich its state and functionality at the time of execution. We turned our attention to design patterns and quickly found out that the \textit{Decorator} design pattern, providing a ``flexible alternative to subclassing for extending functionality'' \cite{dofactory-Decorator}, advertised exactly what we were looking for.
+
+Inspired by the Decorator design pattern, decided to make every component in the \textbf{NeuralNetwork} class library a decorable one. As such, they can be created with minimal state and functionality and later dynamically acquire some additional responsibilities. The \textsc{BackpropagationTeacher} class serves as an example of how every type of component (neuron, layer, synapse, connector, and even network itself) can be promoted to support new state (e.g. \textsc{BackpropagationConnector} adds the momentum) and functionality (e.g. \textsc{BackpropagationLayer} adds the Backpropagate function).
+
+%%%%% TECHNICAL DOCUMENTATION %%%%%
+\section{Technical Documentation}
+
+\textbf{NeuralNetwork} is a class library written in C\# programming language (version 3) and targeted for Microsoft .NET Framework (version 3.5). It is being developed in Microsoft Visual C\# 2008 Express Edition as a part of the \textbf{MarketForecaster} solution - an entire solution aimed at forecasting markets using artificial neural networks.
+
+\subsection{Dependencies}
+
+\textbf{NeuralNetwork} class library itself uses the following class libraries:
+
+\begin{itemize}
+\item \textbf{GeneticAlgorithm} (a genetic algorithm metaheuristic class library)
+\item \textbf{SimulatedAnnealing} (a simulated annealing metaheuristic class library)
+\item \textbf{AntColonyOptimization} (an ant colony optimization metaheuristic class library)
+\end{itemize}
+These were designed and developed as standalone and compact class libraries to support the main \textbf{NeuralNetwork} class library and are part of the \textbf{MarketForecaster} solution. \textbf{NeuralNetwork} class library does not use any third-party class libraries.
+
+\subsection{Relevant Projects from the \textbf{MarketForecaster} solution}
+
+Apart from the \textbf{NeuralNetwork} class library itself, the \textbf{MarketForecaster} solution contains the following relevant projects:
+
+\begin{itemize}
+\item \textbf{NeuralNetworkTest} (a \textbf{NeuralNetwork} class library test harness)
+\item \textbf{NeuralNetworkDemo} (a \textbf{NeuralNetwork} class library demonstration, containing the example from the End User Documentation section of this chapter)
+\end{itemize}
+
+%%%%% END USER DOCUMENTATION %%%%%
+\section{End User Documentation}
+
+To use the \textbf{NeuralNetwork} class library, the client has to follow the standard procedure for using a third-party class library, i.e. add a reference to \texttt{NeuralNetwork.dll} to their project's references. As the whole class library is contained in the \textit{NeuralNetwork} namespace, a \texttt{using NeuralNetwork} directive (or any other nested namespace) is required.
+
+In this section, we will present a tutorial dedicated to building, training and using an multi-layer perceptron to compute a simple function - the \textit{XOR logical function}. The XOR logical function has been chosen for two reasons. First, it is simple enough. Therefore, it will not complicate the explanation unnecessarily. Second, it is \textit{linearly inseparable} and therefore not so simple. Some logical functions (e.g. \textit{NOT}, \textit{AND}, \textit{OR}) are \textit{linearly separable} and therefore so simple, that a single-layer perceptron can be build, trained and used to compute them, making the use of a multi-layer perceptron rather unnecessary.
+
+\subsection{Step 1 : Building a Training Set}
+
+The training set can be build either manually (in the program code itself) or automatically (from a text file).
+
+\subsubsection{Step 1 : Alternative A : Building a Training Set Manually}
+
+When building a training set manually, the input and output vector lengths have to be specified. The length of the input vector is the dimension of the function's domain (2 in our case):
+
+\medskip
+
+\begin{verbatim}
+int inputVectorLength = 2;
+\end{verbatim}
+
+\medskip
+
+The length of the output vector is the dimension of the function's range (1 in our case):
+
+\medskip
+
+\begin{verbatim}
+int outputVectorLength = 1;
+\end{verbatim}
+
+\medskip
+
+The training set can now be built:
+
+\medskip
+
+\begin{verbatim}
+TrainingSet trainingSet = new TrainingSet(
+    inputVectorLength,
+    outputVectorLength
+);
+\end{verbatim}
+
+\medskip
+
+Note that both dimensions have to be positive. Otherwise an exception is thrown.
+
+Naturally, after the training set is build, it is empty, i.e. it does not contain any training patterns just yet. We have to add them manually one by one:
+
+\medskip
+
+\begin{verbatim}
+TrainingPattern trainingPattern;
+trainingPattern = new TrainingPattern(
+    new double[ 2 ] { 0.0,  0.0 }, new double[ 1 ] { 0.0 }
+);
+trainingSet.Add( trainingPattern );
+trainingPattern = new TrainingPattern(
+    new double[ 2 ] { 0.0,  1.0 }, new double[ 1 ] { 1.0 }
+);
+trainingSet.Add( trainingPattern );
+trainingPattern = new TrainingPattern(
+    new double[ 2 ] { 1.0,  0.0 }, new double[ 1 ] { 1.0 }
+);
+trainingSet.Add( trainingPattern );
+trainingPattern = new TrainingPattern(
+    new double[ 2 ] { 1.0,  1.0 }, new double[ 1 ] { 0.0 }
+);
+trainingSet.Add( trainingPattern );}
+\end{verbatim}
+
+\medskip
+
+Note that when attempting to add a training pattern to a training set, its dimensions have to correspond to that of the training set. Otherwise an exception is thrown informing the client about their incompatibility.
+  
+The training set is now build and ready to be used.
+
+\subsubsection{Step 1 : Alternative B : Building a Training Set Automatically}
+
+When building a training set automatically, the name of the file (and path to it) containing the training set has to be specified.
+
+\medskip
+
+\begin{verbatim}
+TrainingSet trainingSet = new TrainingSet( "XOR.trainingset" );
+\end{verbatim}
+
+\medskip
+
+Note that the contents of the file have to conform to the \texttt{.trainingset} file format precisely. Otherwise an exception is thrown.
+
+\paragraph{The \textbf{trainingset} file format} describes the way a training session is stored in a file. The firs row contains two numbers, the dimensions of the input and output vectors. Exactly one blank line has to follow. Next, the file contains an arbitrary number of training patterns, each stored on a separate line. The training pattern is stored by simply having its input and output vectors concatenated and the resulting sequence of real numbers written on a single line\footnote{See the example trainingset files included.}.
+
+The training set is now build and ready to be used.
+
+\subsection{Step 2 : Building a Blueprint of a Network}
+
+Before we can build a network, we need a blueprint to control the construction process. A network blueprint has to contain an input layer blueprint, an arbitrary number of hidden layer blueprints (depending on the required number of hidden layers) and an output layer blueprint.
+
+The input layer blueprint requires that the client specifies the number of input neurons, i.e. the length of the input vector:
+
+\medskip
+
+\begin{verbatim}
+LayerBlueprint inputLayerBlueprint = new LayerBlueprint(
+    inputVectorLength
+);
+\end{verbatim}
+
+\medskip  
+  
+The hidden layers blueprints (being activation layer blueprints) each require that the client specifies the number of hidden neurons and the layer activation function:
+
+\medskip
+
+\begin{verbatim}
+ActivationLayerBlueprint hiddenLayerBlueprint =
+    new ActivationLayerBlueprint(
+        2, new LogisticActivationFunction()
+    );
+\end{verbatim}
+
+\medskip
+  
+Apart from the most widely used activation function - the logistic activation function - several alternative activation functions are provided, namely the linear activation function (used almost exclusively as an output layer activation function) and the hyperbolic tangent activation function.
+
+The output layer blueprint (being an activation layer blueprint) requires the number of output neurons and the layer activation function to be specified by the user:
+
+\medskip
+
+\begin{verbatim}
+ActivationLayerBlueprint outputLayerBlueprint =
+    new ActivationLayerBlueprint(
+        outputVectorLength,
+        new LogisticActivationFunction()
+    );
+\end{verbatim}
+
+\medskip
+  
+Note that the number of (input, hidden and output) neurons has to be positive. Otherwise an exception is thrown.
+
+Now the we have constructed all layer blueprints, we can create the network blueprint:
+
+\medskip
+
+\begin{verbatim}
+NetworkBlueprint networkBlueprint = new NetworkBlueprint(
+    inputLayerBlueprint,
+    hiddenLayerBlueprint,
+    outputLayerBlueprint
+);
+\end{verbatim}
+
+\medskip
+
+If more than one hidden layer is required, the library offers an overload of the network blueprint's constructor accepting a whole array of hidden layer blueprints instead of a single hidden layer as its second argument.
+  
+The network blueprint is now built and ready to be used.
+
+\subsection{Step 3 : Building a Network}
+
+Given we have already created a network blueprint, we can use it to build\footnote{Note that there is (as of now) no alternative way to build a network - the client has to use a blueprint. Since the network construction process is a complex one and offers many possibilities to go astray, it has been (for the time being) automated as much as possible.} the neural network\footnote{In fact, we can use it to build as many neural networks of the same architecture as requested.}:
+
+\medskip
+
+\begin{verbatim}
+Network network = new Network( networkBlueprint );
+\end{verbatim}
+
+\medskip
+
+The network is now built and ready to be trained.
+
+\subsection{Step 4 : Building a Teacher}
+
+While a teacher requires the training set to be specified, the validation and test sets need not be specified. However, shall the user decide to supply the teacher will validation and/or test sets as well, they have to be of the same type as the training set, i.e. their input vector lengths and output vector lengths have to match.
+
+Currently, the teacher will use its training set to both train any given network and to evaluate how successful the network was at classifying the \textit{within-sample} patterns, i.e. inferring the mapping from the data. Its test set, not presented during the training, is then used to evaluate how successful the network was at classifying the \textit{out-of-sample} patterns, i.e. how well it can \textit{generalise} the mapping. The teacher currently has no use for its validation set.
+
+In our case, the teacher is provided only with a training set, as there is no point in generalising such a simple (and enumerable) mapping as the XOR logical function.
+
+\medskip
+
+\begin{verbatim}
+TrainingSet validationSet = null;
+TrainingSet testSet = null;
+ITeacher backpropagationTeacher = new BackpropagationTeacher(
+    trainingSet, validationSet, testSet
+);
+\end{verbatim}
+
+\medskip
+
+Apart from the most widely used teacher, the Backpropagation teacher (\textsc{BackpropaagtionTeacher}), several alternative teachers are supported. These include the genetic algorithm teacher (\textsc{GeneticAlgorithmTeacher}), the simulated annealing teacher (\textsc{SimulatedAnnealingTeacher}) and the ant colony optimization teacher (\textsc{AntColonyOptimizationTeacher}).
+
+The teacher is now built and ready to be used.
+
+\subsection{Step 5 : Training the network}
+
+When training a neural network, it is possible to specify some requirements, e.g. that a allotted computational budget (the maximum number of iterations) is not exceeded or that a required level of accuracy (the maximum tolerable network error) is achieved. Depending on which requirements are specified, the network can be trained in three different modes:
+
+\subsubsection{Mode 1}
+
+Training in the first mode means a certain computational budget is allotted (the maximum number of iterations) and a certain level of accuracy (the maximum tolerable error of the network) is required. Under these circumstances, the training ends either when the budget is depleted or the accuracy is achieved. 
+
+\medskip
+
+\begin{verbatim}
+int maxIterationCount = 10000;
+double maxTolerableNetworkError = 1e-3;
+TrainingLog trainingLog = backpropagationTeacher.Train(
+    network, maxIterationCount,  maxTolerableNetworkError
+);
+\end{verbatim}
+
+\medskip
+
+The actual number of iterations used and the actual error of the network achieved might be of interest. These can be accessed via the \textsc{TrainingLog}'s \texttt{IterationCount} and \texttt{NetworkError} properties respectively.
+  
+The network is now trained and ready to be used.
+  
+\subsubsection{Mode 2}
+
+Training in the second mode means only a certain computational budget (the maximum number of iterations) is allotted. The level of accuracy is ''absolute'' (the maximum tolerable error of the network is 0). Under these circumstances, as the level of accuracy can hardly be achieved, the training ends when the computational budget is depleted.
+
+\medskip
+
+\begin{verbatim}
+int maxIterationCount = 10000;
+TrainingLog trainingLog = backpropagationTeacher.Train(
+    network, maxIterationCount
+);
+\end{verbatim}
+
+\medskip
+
+While the actual number of iterations used is of no interest, the actual error of the network achieved might be. It can accessed via the \textsc{TrainingLog}'s \texttt{NetworkError} property.
+  
+The network is now trained and ready to be used.
+  
+\subsubsection{Mode 3}
+
+Training in the third mode means only a certain level of accuracy (the maximum tolerable network error) is required. The computational budget is ''absolute'' (the maximum number of iterations is set to \texttt{Int32.MaxValue}). Under these circumstances, as the computational budget can hardly be depleted, the training ends when the accuracy is achieved.
+
+\medskip
+
+\begin{verbatim}
+double maxTolerableNetworkError = 1e-3;
+TrainingLog trainingLog = backpropagationTeacher.Train(
+    network, maxTolerableNetworkError
+);
+\end{verbatim}
+
+\medskip
+
+While the actual error of the network achieved is of no interest, the actual number of iterations used might be. It can be accessed via the \textsc{TrainingLog}'s \texttt{IterationCount} property.
+  
+The network is now trained and ready to be used.
+
+\subsection{Step 6 : Examining the Training Log}
+
+The training log returned by the teacher's \texttt{Train} method contains useful information concerning that particular training session. More precisely, it conveys information of three types:
+
+\begin{itemize}
+\item the information regarding the training session itself: the number of runs used (\texttt{RunCount}), the number of iterations used\\ (\texttt{IterationCount}) and the network error achieved (\texttt{NetworkError}),
+\item the measures of fit: the within-sample residual sum of squares\\(\texttt{RSS\_TrainingSet}), the within-sample residual standard deviation (\texttt{RSD\_TrainingSet}), the Akaike information criterion (\texttt{AIC}), the bias-corrected Akaike information criterion (\texttt{AICC}), the Bayesian information criterion (\texttt{BIC}) and the Schwarz Bayesian criterion (\texttt{SBC}), and
+\item the information related to the networks ability to generalise: the out-of-sample residual sum of squares (\texttt{RSS\_TestSet}) and the out-of-sample residual standard deviation (\texttt{RSD\_TestSet}).
+\end{itemize}
+
+\subsection{Step 7 : Using the Trained Network}
+
+After a network has been trained, the client can use it to evaluate the output vector for an input vector\footnote{Obviously, this vector does not have to be one of those presented to the network during the training. In our simple example though, we have no such vector at our disposal.}:
+
+\medskip
+\noindent \texttt{double[] inputVector = trainingSet[ 0 ].InputVector;\\
+double[] outputVector = network.Evaluate( inputVector );}
+\medskip

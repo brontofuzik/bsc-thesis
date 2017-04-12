@@ -1,0 +1,34 @@
+\chapter{Conclusion}
+
+The aim of this work was to investigate the forecasting capabilities of artificial neural networks in general, as well as provide some concrete guidelines that can be followed to effectively utilise this predictive potential. We have divided our path to achieving this goal into two stages.
+
+\medskip
+
+The purpose of the first stage was to lay solid theoretical and practical (software) foundations for any work that would follow. Its ultimate objective was to design an implement a robust, yet easy-to-use artificial neural network class library. This objective has been successfully achieved through the \textbf{NeuralNetwork} class library. This library, although originally conceived as nothing more than an auxiliary project, evolved into an extensible general-purpose artificial neural network class library. However, as of now, only one type of neural network is supported -- the multi-layer perceptron. Instead of supporting more types of neural network architectures, we elected to concentrate our effort on supporting as many learning algorithms as possible, so that a potential client can experiment with training the same network in a variety of ways.
+
+\smallskip
+
+Despite being satisfied and confident with the final result of our achievement, we see room for potential improvement. The following augmentations did not make it to the first `release', either because their addition has not been justified yet, or because their full support would exceed the allotted time budget (and partial support would satisfy only the least demanding clients):
+\begin{itemize}
+\item support for neuron-unique gains of logistic activation function,
+\item wider range of possibilities for adapting learning rate during the training,
+\item support for constructing more sophisticated training strategies (e.g. allowing more control over the way the training patterns are presented to the network being trained),
+\item support for constructing hybrid training algorithms,
+\item support for adding or removing the hidden neurons and/or layers `on the run' (i.e. constructive and/or destructive learning algorithms),
+\item serialisation support, and
+\item multi-threading support.
+\end{itemize}
+
+The \textbf{NeuralNetwork} class library can easily be considered the main contribution of this work.
+
+\medskip
+
+In the second stage, the actual experimentation was carried out. To automate the process of launching a batch of forecasting trials, we decided to create a lightweight \textbf{MarketForecaster} console application on top of the \textbf{NeuralNetwork} class library. With its assistance, we were able to group a number of forecasting trials into a forecasting session, execute this session, and store the results into a forecasting log.
+
+Our forecasting session attempted to try out every sensible combination of lagged variables as possible. For every such combination, several different numbers of hidden neurons were tested.
+
+Three particular launches of this forecasting session were presented in this thesis. During the \textit{first} session, we used multi-layer perceptrons with the identity function as the output layer activation function and fed them with raw data. The results suggest the neural networks were not able to cope with untransformed data.
+
+For our \textit{second} session, we attempted to scale the data by a factor of 0.01, still using the identity activation function in the output layer. During this session, almost all the non-na\"{i}ve trials yielded results of reasonable accuracy. However, neither information criterion was able to pick the candidate that later performed the best on the out-of-sample observations. The candidates picked by the criteria did not perform badly on the test set, but were both outperformed by a comfortable margin.
+
+The \textit{third} session was executed using data scaled by the factor of 0.001. This placed all the elements of the time series within a range compatible with the logistic function, and thus allowed us to use it as an output layer activation function. The forecasting accuracies obtained were somewhat less satisfying than those obtained from the second session. The problem of information criteria being unable to pick the most promising model persisted. Both, the one picked by the Akaike information criterion and the one picked by the Bayesian information criterion\footnote{As a matter of fact, both criteria repeated their choice from the previous session.} were still outperformed, even if not so convincingly, by other models.
